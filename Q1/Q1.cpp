@@ -1,77 +1,102 @@
-// Here is the top-down approach of
-// dynamic programming
 #include <bits/stdc++.h>
+#define ll long long
+#define ull unsigned long long
+#define pii pair<int, int>
+#define pll pair<long long, long long>
 using namespace std;
 
-// Returns the value of maximum profit
-int knapSackRec(int W, int wt[], int val[], int index, int **dp)
+int max_profit_greedy(vector<int> &prices, vector<int> &weights, int W)
 {
-    // base condition
-    if (index < 0)
-        return 0;
-    if (dp[index][W] != -1)
-        return dp[index][W];
+    int n = prices.size();
+    vector<pair<double, int>> p(n);
 
-    if (wt[index] > W)
+    for (int i = 0; i < n; i++)
+    {
+        p[i] = {prices[i] / (double)weights[i], i};
+    }
+
+    sort(p.begin(), p.end(), greater<pair<double, int>>());
+
+    int profit = 0;
+    for (int i = 0; i < n; i++)
     {
 
-        // Store the value of function call
-        // stack in table before return
-        dp[index][W] = knapSackRec(W, wt, val, index - 1, dp);
-        return dp[index][W];
+        int idx = p[i].second;
+
+        if (weights[idx] <= W)
+        {
+            profit += prices[idx];
+            W -= weights[idx];
+        }
+        else
+        {
+            break;
+        }
     }
-    else
+
+    return profit;
+}
+
+int max_profit(vector<int> &prices, vector<int> &weights, int W)
+{
+    int n = prices.size();
+    vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));
+
+    for (int i = 1; i <= n; i++)
     {
-        // Store value in a table before return
-        dp[index][W] = max(val[index] + knapSackRec(W - wt[index], wt, val,
-                                                    index - 1, dp),
-                           knapSackRec(W, wt, val, index - 1, dp));
-
-        // Return value of table after storing
-        return dp[index][W];
+        for (int j = 1; j <= W; j++)
+        {
+            if (weights[i - 1] <= j)
+            {
+                dp[i][j] = max(dp[i - 1][j], dp[i - 1][j - weights[i - 1]] + prices[i - 1]);
+            }
+            else
+            {
+                dp[i][j] = dp[i - 1][j];
+            }
+        }
     }
+
+    return dp[n][W];
 }
 
-int knapSack(int W, int wt[], int val[], int n)
+void solve()
 {
-    // double pointer to declare the
-    // table dynamically
-    int **dp;
-    dp = new int *[n];
-
-    // loop to create the table dynamically
-    for (int i = 0; i < n; i++)
-        dp[i] = new int[W + 1];
-
-    // loop to initially filled the
-    // table with -1
-    for (int i = 0; i < n; i++)
-        for (int j = 0; j < W + 1; j++)
-            dp[i][j] = -1;
-    return knapSackRec(W, wt, val, n - 1, dp);
-}
-
-// Driver Code
-int main()
-{
-    freopen("input1.txt", "r", stdin);
-    freopen("output1.txt", "w", stdout);
-
     int n, W;
     cin >> n >> W;
 
-    int profit[n], weight[n];
+    vector<int> prices(n), weights(n);
 
     for (int i = 0; i < n; i++)
     {
-        cin >> profit[i];
+        cin >> prices[i];
     }
 
     for (int i = 0; i < n; i++)
     {
-        cin >> weight[i];
+        cin >> weights[i];
     }
-    
-    cout << knapSack(W, weight, profit, n);
+
+    cout << "Profit using DP is " << max_profit(prices, weights, W) << endl;
+    cout << "Profit using Greedy is " << max_profit_greedy(prices, weights, W);
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(NULL);
+
+    freopen("input.txt", "r", stdin);
+    freopen("output.txt", "w", stdout);
+
+    int t;
+    cin >> t;
+
+    while (t--)
+    {
+        solve();
+        cout << endl;
+    }
+
     return 0;
 }
